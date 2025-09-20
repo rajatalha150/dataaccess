@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* TV-optimized base styles */
+@layer base {
+  html {
+    font-size: 18px; /* Larger base font for TV viewing */
+  }
+  
+  body {
+    @apply bg-dark-900 text-white font-sans;
+    /* Prevent text selection on TV */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  /* Enhanced focus styles for TV navigation */
+  *:focus {
+    @apply outline-none ring-4 ring-primary-500 ring-opacity-75;
+  }
+  
+  /* Smooth scrolling for TV navigation */
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  /* TV-friendly button styles */
+  .btn-tv {
+    @apply px-8 py-4 text-tv-base font-semibold rounded-lg transition-all duration-200;
+    @apply focus:ring-6 focus:ring-primary-500 focus:scale-105;
+  }
+  
+  .btn-primary {
+    @apply btn-tv bg-primary-600 hover:bg-primary-700 text-white;
+  }
+  
+  .btn-secondary {
+    @apply btn-tv bg-gray-600 hover:bg-gray-700 text-white;
+  }
+  
+  /* TV-optimized card styles */
+  .card-tv {
+    @apply bg-dark-800 rounded-xl p-6 shadow-2xl;
+    @apply focus-within:ring-4 focus-within:ring-primary-500;
+  }
+  
+  /* Navigation styles for TV */
+  .nav-item {
+    @apply px-6 py-4 text-tv-base font-medium rounded-lg transition-all duration-200;
+    @apply hover:bg-dark-700 focus:bg-primary-600 focus:ring-4 focus:ring-primary-500;
+  }
+  
+  /* Media grid optimized for TV viewing distance */
+  .media-grid {
+    @apply grid gap-6;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+  
+  /* Large media cards for TV */
+  .media-card {
+    @apply card-tv cursor-pointer transform transition-all duration-300;
+    @apply hover:scale-105 focus:scale-105 focus:ring-6 focus:ring-primary-500;
+  }
+  
+  /* Slideshow styles */
+  .slideshow-container {
+    @apply relative w-full h-screen bg-black;
+  }
+  
+  .slideshow-image {
+    @apply w-full h-full object-contain;
+  }
+  
+  .slideshow-controls {
+    @apply absolute bottom-8 left-1/2 transform -translate-x-1/2;
+    @apply flex space-x-4 bg-black bg-opacity-50 rounded-full px-6 py-3;
+  }
+  
+  /* Video player styles */
+  .video-player {
+    @apply w-full h-full bg-black;
+  }
+  
+  /* Admin panel styles */
+  .admin-sidebar {
+    @apply w-64 bg-dark-800 h-screen fixed left-0 top-0 overflow-y-auto;
+  }
+  
+  .admin-content {
+    @apply ml-64 p-8 min-h-screen bg-dark-900;
+  }
+  
+  /* Form styles optimized for TV */
+  .form-input {
+    @apply w-full px-4 py-3 text-tv-base bg-dark-700 border border-gray-600 rounded-lg;
+    @apply focus:ring-4 focus:ring-primary-500 focus:border-primary-500;
+  }
+  
+  .form-label {
+    @apply block text-tv-sm font-medium text-gray-300 mb-2;
+  }
+}
+
+@layer utilities {
+  /* TV-specific utilities */
+  .text-tv-shadow {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  }
+  
+  .focus-visible-only {
+    @apply focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500;
+  }
+  
+  /* Hide scrollbars but keep functionality */
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
