@@ -34,11 +34,14 @@ app.use(cors({
   origin: [
     process.env.FRONTEND_URL || 'http://localhost:3000',
     'http://localhost:3000',
-    // Add TV browser user agents if needed
+    'http://192.168.1.138:3000',
+    '*'
   ],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  preflightContinue: false,
+  optionsSuccessStatus: 200
 }));
 
 // Rate limiting
@@ -78,6 +81,13 @@ app.use('/api/media', mediaRoutes);
 app.use('/api/folders', folderRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/scraper', require('./routes/scraper'));
+
+// Legacy route handling for frontend compatibility
+app.use('/auth', authRoutes);
+app.use('/users', userRoutes);
+app.use('/media', mediaRoutes);
+app.use('/folders', folderRoutes);
+app.use('/admin', adminRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

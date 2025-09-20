@@ -5,7 +5,7 @@ const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Get system dashboard stats
+// Get system dashboard stats (main endpoint)
 router.get('/dashboard', [
   authenticateToken,
   requireAdmin
@@ -68,6 +68,91 @@ router.get('/dashboard', [
       },
       recentActivity: recentActivity.rows
     });
+
+  } catch (err) {
+    console.error('Dashboard stats error:', err);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to get dashboard stats'
+    });
+  }
+});
+
+// Get dashboard stats specifically (frontend compatibility)
+router.get('/dashboard/stats', [
+  authenticateToken,
+  requireAdmin
+], async (req, res) => {
+  // Prevent caching to ensure fresh data
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  try {
+    // Get user stats
+    const userStats = await query(`
+      SELECT
+        COUNT(*) as total_users,
+        COUNT(*) FILTER (WHERE role = 'admin') as admin_users,
+        COUNT(*) FILTER (WHERE role = 'user') as regular_users,
+        COUNT(*) FILTER (WHERE role = 'viewer') as viewer_users,
+        COUNT(*) FILTER (WHERE is_active = true) as active_users,
+        COUNT(*) FILTER (WHERE last_login > CURRENT_DATE - INTERVAL '30 days') as active_last_30_days
+      FROM users
+    `);
+
+    // Get media stats
+    const mediaStats = await query(`
+      SELECT
+        COUNT(*) as total_files,
+        COUNT(*) FILTER (WHERE media_type = 'image') as total_images,
+        COUNT(*) FILTER (WHERE media_type = 'video') as total_videos,
+        COUNT(*) FILTER (WHERE media_type = 'movie') as total_movies,
+        COALESCE(SUM(file_size), 0) as total_storage_bytes,
+        COUNT(*) FILTER (WHERE created_at > CURRENT_DATE - INTERVAL '7 days') as files_last_7_days
+      FROM media_files
+    `);
+
+    // Get folder stats
+    const folderStats = await query(`
+      SELECT
+        COUNT(*) as total_folders,
+        COUNT(*) FILTER (WHERE folder_type = 'photos') as photo_folders,
+        COUNT(*) FILTER (WHERE folder_type = 'videos') as video_folders,
+        COUNT(*) FILTER (WHERE folder_type = 'movies') as movie_folders
+      FROM folders
+    `);
+
+    const users = userStats.rows[0] || {};
+    const media = mediaStats.rows[0] || {};
+    const folders = folderStats.rows[0] || {};
+
+    const responseData = {
+      users: {
+        totalUsers: parseInt(users.total_users) || 0,
+        adminUsers: parseInt(users.admin_users) || 0,
+        regularUsers: parseInt(users.regular_users) || 0,
+        viewerUsers: parseInt(users.viewer_users) || 0,
+        activeUsers: parseInt(users.active_users) || 0,
+        activeLast30Days: parseInt(users.active_last_30_days) || 0
+      },
+      media: {
+        totalFiles: parseInt(media.total_files) || 0,
+        totalImages: parseInt(media.total_images) || 0,
+        totalVideos: parseInt(media.total_videos) || 0,
+        totalMovies: parseInt(media.total_movies) || 0,
+        totalStorageBytes: parseInt(media.total_storage_bytes) || 0,
+        filesLast7Days: parseInt(media.files_last_7_days) || 0
+      },
+      folders: {
+        totalFolders: parseInt(folders.total_folders) || 0,
+        photoFolders: parseInt(folders.photo_folders) || 0,
+        videoFolders: parseInt(folders.video_folders) || 0,
+        movieFolders: parseInt(folders.movie_folders) || 0
+      }
+    };
+
+    console.log('Dashboard stats response:', JSON.stringify(responseData, null, 2));
+    res.json(responseData);
 
   } catch (err) {
     console.error('Dashboard stats error:', err);

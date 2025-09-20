@@ -88,7 +88,7 @@
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-gray-300 text-sm">
-                    <span class="font-medium text-white">{{ activity.user_name }}</span>
+                    <span class="font-medium text-white">{{ activity.first_name }} {{ activity.last_name }}</span>
                     {{ getActivityDescription(activity.action) }}
                   </p>
                   <p class="text-gray-500 text-xs mt-1">{{ formatDate(activity.created_at) }}</p>
@@ -164,10 +164,35 @@ const loadDashboardData = async () => {
       $api('/admin/system-info')
     ])
 
-    stats.value = statsResponse.stats
-    mediaTypeStats.value = statsResponse.mediaTypeStats
-    recentActivity.value = activityResponse.activities
-    systemInfo.value = systemResponse.systemInfo
+    // Map API response to frontend expected format
+    stats.value = {
+      totalUsers: statsResponse.users?.totalUsers || 0,
+      totalMediaFiles: statsResponse.media?.totalFiles || 0,
+      totalFolders: statsResponse.folders?.totalFolders || 0,
+      totalStorage: statsResponse.media?.totalStorageBytes || 0
+    }
+
+    // Build media type stats from the response
+    mediaTypeStats.value = [
+      { type: 'images', count: statsResponse.media?.totalImages || 0 },
+      { type: 'videos', count: statsResponse.media?.totalVideos || 0 },
+      { type: 'movies', count: statsResponse.media?.totalMovies || 0 }
+    ].map(item => ({
+      ...item,
+      percentage: stats.value.totalMediaFiles > 0 ?
+        Math.round((item.count / stats.value.totalMediaFiles) * 100) : 0
+    }))
+
+    recentActivity.value = activityResponse.logs || []
+
+    // Format system info for display
+    const sysInfo = systemResponse.systemInfo || {}
+    systemInfo.value = {
+      uptime: sysInfo.uptime ? formatUptime(sysInfo.uptime) : 'Unknown',
+      nodeVersion: sysInfo.nodeVersion || 'Unknown',
+      dbStatus: 'Connected',
+      lastBackup: null
+    }
   } catch (error) {
     console.error('Error loading dashboard data:', error)
   }
@@ -184,6 +209,20 @@ const formatBytes = (bytes) => {
 
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleString()
+}
+
+const formatUptime = (uptimeSeconds) => {
+  const days = Math.floor(uptimeSeconds / 86400)
+  const hours = Math.floor((uptimeSeconds % 86400) / 3600)
+  const minutes = Math.floor((uptimeSeconds % 3600) / 60)
+
+  if (days > 0) {
+    return `${days}d ${hours}h ${minutes}m`
+  } else if (hours > 0) {
+    return `${hours}h ${minutes}m`
+  } else {
+    return `${minutes}m`
+  }
 }
 
 const getTypeColor = (type) => {
